@@ -1,3 +1,8 @@
+/*
+ * 版权所有 Jagen Zhao (2018)
+ * 本代码仅供学习参考，不得用于任何商业用途。
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include "rbtree.h"

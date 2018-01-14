@@ -1,3 +1,8 @@
+/*
+ * 版权所有 Jagen Zhao (2018)
+ * 本代码仅供学习参考，不得用于任何商业用途。
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -138,6 +143,10 @@ rbtree_get_prev_node( struct _node* node )
     
     return rbtree_get_last_node( node->left );
 }
+
+// 树的左旋
+static inline struct _node*
+rbtree_left_roate
 
 // 获得后继节点
 static inline struct _node*
