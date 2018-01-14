@@ -8,8 +8,9 @@
 #include "rbtree.h"
 
 static void
-foreach_callback( char* key, void* data )
+foreach_callback( char *key, void *data, void *udata )
 {
+    udata = NULL;
     printf( "key: %s, data: %s\n", key, (char*)data );
 }
 
@@ -56,7 +57,7 @@ int main()
     printf( "node count: %d\n", rbtree_get_size( tree ) );
     printf( "first key is: %s\n", rbtree_get_first_key( tree ) );
     printf( "last key is: %s\n", rbtree_get_last_key( tree ) );
-    rbtree_foreach( tree, foreach_callback );
+    rbtree_foreach( tree, foreach_callback, NULL );
 
     void* data = rbtree_find_by_key( tree, "3" );
     printf( "key=3 and data is: %s\n", (char*)data );
@@ -68,10 +69,26 @@ int main()
     printf( "node count: %d\n", rbtree_get_size( tree ) );
     printf( "first key is: %s\n", rbtree_get_first_key( tree ) );
     printf( "last key is: %s\n", rbtree_get_last_key( tree ) );
-    rbtree_foreach( tree, foreach_callback );
+    rbtree_foreach( tree, foreach_callback, NULL );
     printf( "--------------------------------\n" );
 
     rbtree_remove( tree, "3" );
-    rbtree_foreach( tree, foreach_callback );
+    printf( "node count: %d\n", rbtree_get_size( tree ) );
+    printf( "first key is: %s\n", rbtree_get_first_key( tree ) );
+    printf( "last key is: %s\n", rbtree_get_last_key( tree ) );    
+    rbtree_foreach( tree, foreach_callback, NULL );
+    printf( "--------------------------------\n" );
+
+    rbtree_remove( tree, "f" );
+    printf( "node count: %d\n", rbtree_get_size( tree ) );
+    printf( "first key is: %s\n", rbtree_get_first_key( tree ) );
+    printf( "last key is: %s\n", rbtree_get_last_key( tree ) );    
+    rbtree_foreach( tree, foreach_callback, NULL );
+
+    rbtree_remove( tree, "z" );
+    printf( "node count: %d\n", rbtree_get_size( tree ) );
+    printf( "first key is: %s\n", rbtree_get_first_key( tree ) );
+    printf( "last key is: %s\n", rbtree_get_last_key( tree ) );    
+    rbtree_foreach( tree, foreach_callback, NULL );
     return 0;
 }

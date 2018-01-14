@@ -23,36 +23,39 @@
 #define D_BLACK 2
 
 struct _rbtree {
-    struct _node*   root;
+    struct _node   *root;
     int             size;
 };
 
 struct _node {
-    struct _node*   left;
-    struct _node*   right;
-    struct _node*   parent;
+    struct _node   *left;
+    struct _node   *right;
+    struct _node   *parent;
     int             color;
-    char*           key;
-    void*           data;
+    char           *key;
+    void           *data;
 };
 
-// 创建新的节点
-static inline struct _node* 
-rbtree_create_node( char* key, void* data )
+/*
+ * 创建新的节点
+ */
+static inline struct _node * 
+rbtree_create_node( char *key, void *data )
 {
-    struct _node *node = (struct _node*)malloc( sizeof( struct _node ));
-    if( NULL == node )
-        return NULL;
+    struct _node *node = (struct _node *)malloc( sizeof( struct _node ));
+    if( NULL == node ) return NULL;
 
     node->left = node->right = node->parent =  NULL;
     node->color = RED;
-    node->key = key;
-    node->data = data;
+    node->key   = key;
+    node->data  = data;
 
     return node;
 }
 
-// 释放节点
+/*
+ * 释放节点
+ */
 static inline void 
 rbtree_free_node( struct _node *node )
 {
@@ -64,69 +67,78 @@ rbtree_free_node( struct _node *node )
     free( node );
 }
 
-// 获取兄弟节点
-static inline struct _node* 
-rbtree_get_sibling_node( struct _node* node )
+/*
+ * 获取兄弟节点
+ */
+static inline struct _node * 
+rbtree_get_sibling_node( struct _node *node )
 {
     if( NULL == node ) return NULL;
 
-    struct _node* p = node->parent;
+    struct _node *p = node->parent;
     if( NULL == p ) return NULL;
 
     return p->left == node ? p->right : p->right;
 }
 
-// 获得祖父节点
-static inline struct _node*
-rbtree_get_grandparent_node( struct _node* node )
+/*
+ * 获得祖父节点
+ */
+static inline struct _node *
+rbtree_get_grandparent_node( struct _node *node )
 {
     if( NULL == node ) return NULL;
-    struct _node* p = node->parent;
+    struct _node *p = node->parent;
     return NULL == p ? NULL : p->parent;
 }
 
-// 获得叔叔节点
-static inline struct _node*
-rbtree_get_uncle_node( struct _node* node )
+/*
+ * 获得叔叔节点
+ */
+static inline struct _node *
+rbtree_get_uncle_node( struct _node *node )
 {
     if( NULL == node ) return NULL;
     return rbtree_get_sibling_node( node->parent );
 }
 
-// 获得第一个节点
-static inline struct _node*
-rbtree_get_first_node( struct _node* root ) 
+/*
+ * 获得第一个节点
+ */
+static inline struct _node *
+rbtree_get_first_node( struct _node *root ) 
 {
-    struct _node* node = root;
-    if( NULL == node )
-        return NULL;
+    struct _node *node = root;
+    if( NULL == node ) return NULL;
 
-    while(node->left) {
+    while( NULL != node->left )
         node = node->left;
-    }
+
     return node;
 }
 
-// 获得最后一个节点
-static inline struct _node*
-rbtree_get_last_node( struct _node* root )
+/*
+ * 获得最后一个节点
+ */
+static inline struct _node *
+rbtree_get_last_node( struct _node *root )
 {   
-    struct _node* node = root;
-    if( NULL == node )
-        return NULL;
+    struct _node *node = root;
+    if( NULL == node ) return NULL;
 
-    while( node->right ) {
+    while( NULL != node->right )
         node = node->right;
-    }
+
     return node;
 }
 
-// 获得前继节点
-static inline struct _node*
-rbtree_get_prev_node( struct _node* node )
+/*
+ * 获得前继节点
+ */
+static inline struct _node *
+rbtree_get_prev_node( struct _node *node )
 {
-    if( NULL == node )
-        return NULL;
+    if( NULL == node ) return NULL;
     
     if( NULL == node->left ) {
         while( NULL != node->parent ) {
@@ -134,9 +146,7 @@ rbtree_get_prev_node( struct _node* node )
             if( p->left == node ) {
                 node = p;
                 continue;
-            } else {
-                return p;
-            }
+            } else return p;
         }
         return NULL;
     }
@@ -144,11 +154,79 @@ rbtree_get_prev_node( struct _node* node )
     return rbtree_get_last_node( node->left );
 }
 
-// 树的左旋
-static inline struct _node*
-rbtree_left_roate
+/* 
+ * 树的左旋
+ *         x                y
+ *        / \              / \
+ *       a   y     ==>    x   c
+ *          / \          / \
+ *         b   c        a   b
+ */
+static inline struct _node *
+rbtree_left_rotate( struct _node *root, struct _node *x )
+{
+    assert( NULL != x );
+    assert( NULL != x->right );
 
-// 获得后继节点
+    struct _node *y = x->right;
+
+    x->right  = y->left;
+    if( NULL != x->right )
+        x->right->parent = x;
+    y->left   = x;
+    y->parent = x->parent;
+    x->parent = y;
+
+    if( root == x ) 
+        root = y;
+    else {
+        if( y->parent->left == x )
+            y->parent->left = y;
+        else 
+            y->parent->right = y;
+    }
+
+    return root;
+}
+
+/* 
+ * 树的右旋
+ *          y              x
+ *         / \            / \
+ *        x   c    ==>   a   y
+ *       / \                / \
+ *      a   b              b   c
+ */
+static inline struct _node*
+rbtree_right_rotate( struct _node* root, struct _node* y )
+{
+    assert( NULL != y );
+    assert( NULL != y->left );
+
+    struct _node *x = y->left;
+
+    y->left   = x->right;
+    if( NULL != y->left )
+        y->left->parent = y;
+    x->right  = y;
+    x->parent = y->parent;
+    y->parent = x;
+
+    if( root == y ) 
+        root = x;
+    else {
+        if( x->parent->left == y )
+            x->parent->left = x;
+        else 
+            x->parent->right = x;
+    }
+
+    return root;
+}
+
+/*
+ * 获得后继节点
+ */
 static inline struct _node*
 rbtree_get_next_node( struct _node* node )
 {
@@ -171,7 +249,9 @@ rbtree_get_next_node( struct _node* node )
     return rbtree_get_first_node( node->right );
 }
 
-// 根据key值寻找节点
+/*
+ * 根据key值寻找节点
+ */
 static inline struct _node*
 rbtree_find_node_by_key( struct _node* root, char* key )
 {
@@ -191,413 +271,231 @@ rbtree_find_node_by_key( struct _node* root, char* key )
     return NULL;
 }
 
-// 按照模式匹配方式进行插入时的红黑树平衡算法
-// 非递归方式实现
+/*
+ * 按照模式匹配方式进行插入时的红黑树平衡算法
+ * 非递归方式实现
+ */
 static inline struct _node*
 rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
 {
-    struct _node *x = NULL, *y = NULL, *z = NULL;
+    struct _node *n = new_node;
+    struct _node *g = NULL;
 
-    while( new_node->parent != NULL && new_node->parent->parent != NULL) {
-        struct _node *p = new_node->parent;
-        if( p->left == new_node ) { // 在左子树插入
+    while( ( g = rbtree_get_grandparent_node( n ) ) != NULL) {
+        struct _node *p = n->parent;
+        if( n->color == RED && p->color == RED ) {
             /* 
-             *           *z
+             *           *g
              *           / \
-             *         y    D               y
+             *         p    D    右旋        p
              *        / \        ==>       / \
-             *      x    C              *x    *z
+             *      n    C              *n    *g
              *     / \                  / \   / \
              *    A   B                A   B C   D
              */
-            if( p->parent->left == p ) { 
-                x = new_node;
-                y = p;
-                z = p->parent;
-                if( z->color == BLACK && x->color == RED && y->color == RED ) {
-                    y->parent = z->parent;
-                    z->parent = y;
-                    z->left   = y->right;
-                    y->right  = z;
-                    if( z->left != NULL )
-                        z->left->parent = z;
-                    x->color  = BLACK;
-                    if( NULL == y->parent ) { //调整结束，需要变更根节点
-                        y->color = BLACK;
-                        return y;
-                    } else {
-                        if( y->parent->left == z )
-                            y->parent->left = y;
-                        else 
-                            y->parent->right = y;
-                    }
-                } else return root;
+            if( p->left == n && g->left == p ) {
+                root = rbtree_right_rotate( root, g );
+                n->color    = BLACK;
+                n = p;
             }
             /*
-             *       *x
-             *       / \      
-             *      A    z                  y
-             *          / \      ==>       / \
-             *        y    D            *x    *z
-             *       / \                / \   / \
-             *      B   C              A   B C   D
-             */
-            else {
-                y = new_node;
-                z = p;
-                x = p->parent;
-                if( x->color == BLACK && y->color == RED && z->color == RED ) {
-                    y->parent = x->parent;
-                    x->parent = y;
-                    x->right  = y->left;
-                    if( x->right != NULL )
-                        x->right->parent = x;
-                    y->left   = x;
-                    z->parent = y;
-                    z->left   = y->right;
-                    if( z->left != NULL )
-                        z->left->parent = z;
-                    y->right  = z;
-                    z->color  = BLACK;
-                    if( NULL == y->parent ) {
-                        y->color = BLACK;
-                        return y;
-                    } else {
-                        if( y->parent->left == x ) 
-                            y->parent->left = y;
-                        else
-                            y->parent->right = y;
-                    }
-                } else return root;
+             *       *g                *g
+             *       / \               / \
+             *      A   p      右旋    A   n      左旋         n
+             *         / \     ==>       / \     ==>        / \
+             *        n   D             B   p            *g    *p
+             *       / \                   / \           / \   / \
+             *      B   C                 C   D         A   B C   D
+             */            
+            else if( p->left == n && g->right == p ) { 
+                rbtree_right_rotate( root, p );
+                root = rbtree_left_rotate( root, g );
+                p->color    = BLACK;
             }
-        } else { 
             /* 
-             *     *x
+             *     *g
              *     / \
-             *    A   y                     y
-             *       / \         ==>       / \
-             *      B   z               *x    *z
+             *    A   p        左旋          p
+             *       / \       ==>         / \
+             *      B   n               *g    *n
              *         / \              / \   / \
              *        C   D            A   B C   D
-             */
-            if( p->parent->right == p ) {
-                z = new_node;
-                y = p;
-                x = p->parent;
-                if( x->color == BLACK && y->color == RED && z->color == RED ) {
-                    y->parent = x->parent;
-                    x->parent = y;
-                    x->right  = y->left;
-                    if( x->right != NULL )
-                        x->right->parent = x;
-                    y->left   = x;
-                    z->color  = BLACK;
-                    if( NULL == y->parent ) {
-                        y->color = BLACK;
-                        return y;
-                    } else {
-                        if( y->parent->left == x )
-                            y->parent->left = y;
-                        else 
-                            y->parent->right = y;
-                    }
-                } else return root;
+             */            
+            else if( p->right == n && g->right == p ) {
+                root = rbtree_left_rotate( root, g );
+                n->color    = BLACK;
+                n = p;
             }
             /* 
-             *       *z
-             *       / \
-             *      x   D                   y
-             *     / \           ==>       / \
-             *    A   y                 *x    *z
-             *       / \                / \   / \
-             *      B   C              A   B C   D
-             */
+             *       *g                  *g
+             *       / \                 / \
+             *      p   D      左旋      n   D    右         n
+             *     / \         ==      / \       ==>       / \
+             *    A   n               p   C             *p    *g
+             *       / \             / \                / \   / \
+             *      B   C           A   B              A   B C   D
+             */             
             else {
-                y = new_node;
-                x = p;
-                z = p->parent;
-                if( z->color == BLACK && x->color == RED && y->color == RED ) {
-                    y->parent = z->parent;
-                    z->parent = y;
-                    z->left   = y->right;
-                    if( z->left != NULL )
-                        z->left->parent = z;
-                    y->right  = z;
-                    x->right  = y->left;
-                    if( x->right != NULL )
-                        x->right->parent = x;
-                    y->left   = x;
-                    x->parent = y;
-                    x->color  = BLACK;
-                    if( NULL == y->parent ) {
-                        y->color = BLACK;
-                        return y;
-                    } else {
-                        if( y->parent->left == z )
-                            y->parent->left = y;
-                        else 
-                            y->parent->right = y;
-                    }
-                } else return root;
+                rbtree_left_rotate( root, p );
+                root = rbtree_right_rotate( root, g );
+                p->color    = BLACK;
             }
-        }
-
-        new_node = y; // 继续调整
+            root->color = BLACK;
+        } else
+            return root;
     }
     
     return root;
 }
 
-// 按照模式匹配方式进行删除时的红黑树平衡算法
-// 非递归方式实现
-static inline struct _node* 
-rbtree_delete_belance_by_pattern( struct _node* root, struct _node* node ) 
+/*
+ * 按照模式匹配方式进行删除时的红黑树平衡算法
+ * 非递归方式实现
+ */
+static inline struct _node * 
+rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node ) 
 {
-    struct _node *x = NULL, *y = NULL, *z = NULL;
+    struct _node *d = node;
 
-    if( node->color == BLACK )
-        node->color = D_BLACK;
+    if( d->color == BLACK )
+        d->color = D_BLACK;
 
-    while( node->color == D_BLACK ) {
+    while( d->color == D_BLACK ) {
         struct _node *p = node->parent;
+        struct _node *s = rbtree_get_sibling_node( d );
+        assert( NULL != s );
 
-        if( NULL == p) { // 达到根节点，调整完毕
-            node->color = BLACK;
+        if( NULL == p ) { // 达到根节点，调整完毕
+            d->color = BLACK;
             break;
         }
 
-        if( p->left == node && p->right != NULL ) {
-            x = p; 
-            y = x->right;
-
-            if( (y->left == NULL || y->left->color == BLACK)
-                && (y->right == NULL || y->right->color == BLACK ) ) {
-                /*       x                *x      
-                 *      / \               / \     
-                 *   **a   *y     ==>    *a   y    
-                 *        /  \               / \   
-                 *      *b   *c            *b   *c  
-                 */
-                if( y->color == BLACK ) {
-                    node->color = BLACK;
-                    if( x->color == RED ) 
-                        x->color = BLACK;
-                    else {
-                        x->color = D_BLACK;
-                        node = x;
-                    }
-                    y->color = RED;
-                }                 
-                /*      *x                 *y      
-                 *      / \                / \     
-                 *   **a    y     ==>     x   *c    
-                 *         / \           / \   
-                 *       *b   *c      **a   *b  
-                 */                
-                else {
-                    x->right  = y->left;
-                    if( x->right != NULL )
-                        x->right->parent = x;
-                    y->left   = x;
-                    y->parent = x->parent;
-                    y->color  = BLACK;
-                    x->parent = y;
-                    x->color  = RED;
-                    if( y->parent != NULL ) {
-                        if( y->parent->left == x )
-                            y->parent->left = y;
-                        else
-                            y->parent->right = y;
-                    } else 
-                        root = y;
-                }
+        if( p->left == d ) { // 左子树删除操作
+            /*      *p                 *s      
+             *      / \       左       / \     
+             *   **d    s     ==>     p   *c    
+             *         / \           / \   
+             *       *b   *c      **d   *b  
+             */                
+            if( s->color == RED ) {
+                root = rbtree_left_rotate( root, s );
+                p->color    = RED;
+                s->color    = BLACK;
             }
             /*
-             *       x                   
-             *      / \                   y
-             *   **a  *z                 / \
-             *        / \     ==>     *x    *z
-             *       y   d            / \   / \
-             *      / \             *a   b c   d 
-             *     b   c
-             */ 
-            else if( y->left != NULL && y->left->color == RED ) {
-                z = y;
-                y = z->left;
-
-                node->color = BLACK;
-                x->right  = y->left;
-                if( x->right != NULL )
-                    x->right->parent = x;
-                y->right  = x;
-                y->parent = x->parent;
-                x->color  = BLACK;
-                z->left   = y->right;
-                if( z->left != NULL )
-                    z->left->parent = z;
-                y->right  = z;
-                z->parent = y;
-                if( y->parent != NULL ) {
-                    if( y->parent->left == x )
-                        y->parent->left = y;
-                    else
-                        y->parent->right = y;
-                } else 
-                    root = y;
+             *       p               p       
+             *      / \             / \                      l
+             *   **d  *s    右旋  **d   l       左旋         / \
+             *        / \   ==>        / \     ==>       *p   *s
+             *       l   a            c  *s              / \  / \
+             *      / \                  / \           *d   c b  a 
+             *     c   b                b   a
+             */
+            else if( s->left != NULL && s->left->color == RED ) {
+                rbtree_right_rotate( root, s );
+                root = rbtree_left_rotate( root, p );
+                d->color    = BLACK;
+                p->color    = BLACK;
             }
             /*
-             *       x                   
-             *      / \                   y
-             *   **a  *y                 / \
-             *        / \     ==>      *x    *z
-             *       b   z            / \   / \
-             *          / \         *a   b c   d 
-             *         c   d
-             */             
-            else if( y->right != NULL && y->right->color == RED ) {
-                z = y->right;
-
-                node->color = BLACK;
-                x->right = y->left;
-                if( x->right != NULL )
-                    x->right->parent = x;
-                y->left   = x;
-                y->parent = x->parent;
-                x->parent = y;
-                z->color  = BLACK;
-                x->color  = BLACK;
-                if( y->parent != NULL ) {
-                    if( y->parent->left == x )
-                        y->parent->left = y;
-                    else 
-                        y->parent->right = y;
-                } else 
-                    root = y;
+             *       p              
+             *      / \               s
+             *   **d  *s    左旋      / \
+             *        / \   ==>    *p   *r
+             *       c   r         / \  / \
+             *          / \      *d   c b   a 
+             *         b   a
+             */  
+            else if( s->right != NULL && s->right->color == RED ) {
+                root = rbtree_left_rotate( root, p );
+                d->color        = BLACK;
+                p->color        = BLACK;
+                s->right->color = BLACK;               
             }
-        }
-        else if( p->right == node && p->left != NULL ) {
-            y = p;
-            x = y->left;
-            if( ( x->left == NULL || x->left->color == BLACK )
-                && ( x->right == NULL || x->right->color == BLACK ) ) {
-                /*
-                 *           y              *y
-                 *          / \             / \
-                 *        *x  **c    ==>   x   *c
-                 *        / \             / \
-                 *      *a  *b          *a  *b 
-                 */
-                if( x->color == BLACK ) {
-                    node->color = BLACK;
-                    if( y->color == RED ) {
-                        y->color = BLACK;
-                    } else {
-                        y->color = D_BLACK;
-                        node = x;
-                    }
-                    x->color = RED;
-                } 
-                /*
-                 *          *y              *x
-                 *          / \             / \
-                 *         x  **c    ==>  *a    y   
-                 *        / \                  / \
-                 *      *a  *b               *b  **c 
-                 */
-                else {
-                    y->left   = x->right;
-                    if( y->left != NULL )
-                        y->left->parent = y;
-                    x->right  = y;
-                    x->parent = y->parent;
-                    y->parent = x;
-                    y->color  = RED;
-                    x->color  = BLACK;
-                    if( x->parent != NULL ) {
-                        if( x->parent->left == y )
-                            x->parent->left = x;
-                        else
-                            x->parent->right = x;
-                    } else
-                        root = x;
-                }
-            } 
+            /*       p                *p      
+             *      / \               / \     
+             *   **d   *s     ==>   *d    s    
+             *        /  \               / \   
+             *      *b   *c            *b   *c  
+             */
+            else {
+                d->color = BLACK;
+                if( p->color == RED )
+                    p->color = BLACK;
+                else 
+                    p->color = D_BLACK;
+                s->color = RED;
+                d = p;
+            }
+        } else {
             /*
-             *         z                   
-             *        / \                 y
-             *      *x  **d              / \
-             *      / \       ==>      *x    *z
-             *     a   y              / \   / \
-             *        / \            a   b c   *d 
-             *       b   c
-             */              
-            else if ( x->right != NULL && x->right->color == RED  ) {
-                z = y;
-                y = x->right;
-                
-                node->color = BLACK;
-                y->parent = z->parent;
-                z->left   = y->right;
-                if( z->left != NULL )
-                    z->left->parent = z;
-                z->parent = y;
-                z->color  = BLACK;
-                y->right  = z;
-                x->right  = y->left;
-                if( x->right != NULL )
-                    x->right->parent = x;
-                x->parent = y;
-                y->left   = x;
-
-                if( y->parent != NULL ) {
-                    if( y->parent->left == z )
-                        y->parent->left = y;
-                    else 
-                        y->parent->right = y;
-                } else 
-                    root = y;
-            } 
+             *          *p              *s
+             *          / \      右旋    / \
+             *         s  **d    ==>  *a    p   
+             *        / \                  / \
+             *      *a  *b               *b  **d 
+             */
+            if( s->color == RED ) {
+                root = rbtree_right_rotate( root, p );
+                p->color = RED;
+                s->color = BLACK;
+            }
             /*
-             *         z                   
-             *        / \                y
-             *      *y  **d             / \
-             *      / \       ==>     *x    *z
-             *     x   c              / \   / \
+             *         p                   
+             *        / \                s
+             *      *s  **d   右旋       / \
+             *      / \       ==>     *l    *p
+             *     l   c              / \   / \
              *    / \                a   b c   *d 
              *   a   b
-             */  
-            else if ( x->left != NULL && x->left->color == RED ) {
-                z = y;
-                y = x;
-                x = y->left;
-
-                node->color = BLACK;
-                y->parent = z->parent;
-                z->left   = y->right;
-                if( z->left != NULL )
-                    z->left->parent = z;
-                z->parent = y;
-                y->right  = z;
-                z->color  = BLACK;
-                x->color  = BLACK;
-
-                if( y->parent != NULL ) {
-                    if( y->parent->left == z )
-                        y->parent->left = y;
-                    else 
-                        y->parent->right = y;
-                } else 
-                    root = y;
+             */              
+            else if( s->left != NULL && s->left->color == RED ) {
+                root = rbtree_right_rotate( root, p );
+                d->color       = BLACK;              
+                p->color       = BLACK;
+                s->left->color = BLACK;
+            }
+            /*
+             *         p                  p         
+             *        / \                / \               r
+             *      *s  **d   左旋       r  **d 右旋       / \
+             *      / \       ==>      / \      ==>    *s    *p
+             *     a   r             *s   c            / \   / \
+             *        / \            / \              a   b c   *d 
+             *       b   c          a   b
+             */              
+            else if( s->right != NULL && s->right->color == RED ) {
+                rbtree_left_rotate( root, s );
+                root = rbtree_right_rotate( root, p );
+                d->color = BLACK;
+                p->color = BLACK;
+            }
+            /*
+             *           p              *p
+             *          / \             / \
+             *        *s  **d    ==>   s   *d
+             *        / \             / \
+             *      *a  *b          *a  *b 
+             */            
+            else {
+                d->color = BLACK;
+                if( p->color == RED )
+                    p->color = BLACK;
+                else 
+                    p->color = D_BLACK;
+                s->color = RED;
+                d = p;
             }
         }
+        root->color = BLACK;
     }
     return root;
 }
 
-RBTree* 
+RBTree *  
 rbtree_create()
 {
-    RBTree* tree = (RBTree*)malloc( sizeof( RBTree ) );
+    RBTree *tree = (RBTree *)malloc( sizeof( RBTree ) );
     if( NULL == tree )
         return NULL;
     
@@ -607,7 +505,8 @@ rbtree_create()
     return tree;
 }
 
-int rbtree_insert( RBTree* tree, char* key, void* data )
+int 
+rbtree_insert( RBTree *tree, char *key, void *data )
 {
     if( NULL == tree )
         return -1;
@@ -659,12 +558,13 @@ int rbtree_insert( RBTree* tree, char* key, void* data )
     return 0;
 }
 
-int rbtree_remove( RBTree *tree, char *key )
+int 
+rbtree_remove( RBTree *tree, char *key )
 {
     if( NULL == tree && NULL == tree->root )
         return -1;
 
-    struct _node* node = rbtree_find_node_by_key( tree->root, key );
+    struct _node *node = rbtree_find_node_by_key( tree->root, key );
     if( NULL == node )
         return -1;
 
@@ -677,7 +577,7 @@ int rbtree_remove( RBTree *tree, char *key )
     }
 
     while( TRUE ) {
-        struct _node* p = node->parent;
+        struct _node *p = node->parent;
         if( NULL == node->left) { // 先判断左子树空
             // 先调整平衡性
             tree->root = rbtree_delete_belance_by_pattern( tree->root, node );
@@ -718,15 +618,15 @@ int rbtree_remove( RBTree *tree, char *key )
             rbtree_free_node( node );
             break;
         } else { // 左右子树都不为空
-            struct _node* tmp = rbtree_get_next_node( node );
+            struct _node *tmp = rbtree_get_next_node( node );
             assert( tmp->parent != NULL );
             free( node->key );
             free( node->data );
-            node->key = tmp->key;
+            node->key  = tmp->key;
             node->data = tmp->data;
-            tmp->key = NULL;
-            tmp->data = NULL;
-            node = tmp;
+            tmp->key   = NULL;
+            tmp->data  = NULL;
+            node       = tmp;
         }
     }
 
@@ -735,19 +635,21 @@ int rbtree_remove( RBTree *tree, char *key )
     return 0;
 }
 
-void* rbtree_find_by_key( RBTree* tree, char* key ) 
+void * 
+rbtree_find_by_key( RBTree *tree, char *key ) 
 {
     if( NULL == tree )
         return NULL;
 
-    struct _node* node = rbtree_find_node_by_key( tree->root, key );
+    struct _node *node = rbtree_find_node_by_key( tree->root, key );
     if( NULL == node )
         return NULL;
 
     return node->data;
 }
 
-int rbtree_get_size( RBTree* tree )
+int 
+rbtree_get_size( RBTree *tree )
 {
     if( NULL == tree ) 
         return -1;
@@ -755,35 +657,38 @@ int rbtree_get_size( RBTree* tree )
     return tree->size;
 }
 
-char* rbtree_get_first_key( RBTree* tree ) 
+char * 
+rbtree_get_first_key( RBTree *tree ) 
 {
     if( NULL == tree )
         return NULL;
     
-    struct _node* node = rbtree_get_first_node( tree->root );
+    struct _node *node = rbtree_get_first_node( tree->root );
     if( NULL == node )
         return NULL;
     
     return node->key;
 }
 
-char* rbtree_get_last_key( RBTree* tree )
+char * 
+rbtree_get_last_key( RBTree *tree )
 {
     if( NULL == tree )
         return NULL;
 
-    struct _node* node = rbtree_get_last_node( tree->root );
+    struct _node *node = rbtree_get_last_node( tree->root );
     if( NULL == node )
         return NULL;
 
     return node->key;
 }
 
-void rbtree_foreach( RBTree* tree, rbtree_foreach_callback fun )
+void 
+rbtree_foreach( RBTree *tree, rbtree_foreach_callback fun, void *udata )
 {
     struct _node *node = rbtree_get_first_node( tree->root );
     while( node != NULL ) {
-        fun( node->key, node->data );
+        fun( node->key, node->data, udata );
         node = rbtree_get_next_node( node );
     }
 }
