@@ -1,6 +1,18 @@
 /*
- * 版权所有 Jagen Zhao (2018)
- * 本代码仅供学习参考，不得用于任何商业用途。
+ * Copyrigth (C) Jagen Zhao (2018) jagen.zhao@gmail.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This porgram is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY of FITNESS FOR A PARTICULAR PURPOSE. See the 
+ * GNU General Public License for more details.
+ * 
+ * You should hava received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/license/>.
  */
 
 #include <stdio.h>
@@ -37,7 +49,7 @@ struct _node {
 };
 
 /*
- * 创建新的节点
+ * Create a new node.
  */
 static inline struct _node * 
 rbtree_create_node( char *key, void *data )
@@ -54,7 +66,7 @@ rbtree_create_node( char *key, void *data )
 }
 
 /*
- * 释放节点
+ * Free node.
  */
 static inline void 
 rbtree_free_node( struct _node *node )
@@ -68,7 +80,7 @@ rbtree_free_node( struct _node *node )
 }
 
 /*
- * 获取兄弟节点
+ * Gets sibling node.
  */
 static inline struct _node * 
 rbtree_get_sibling_node( struct _node *node )
@@ -82,7 +94,7 @@ rbtree_get_sibling_node( struct _node *node )
 }
 
 /*
- * 获得祖父节点
+ * Gets grandparent node.
  */
 static inline struct _node *
 rbtree_get_grandparent_node( struct _node *node )
@@ -93,7 +105,7 @@ rbtree_get_grandparent_node( struct _node *node )
 }
 
 /*
- * 获得叔叔节点
+ * Gets uncle node.
  */
 static inline struct _node *
 rbtree_get_uncle_node( struct _node *node )
@@ -103,7 +115,7 @@ rbtree_get_uncle_node( struct _node *node )
 }
 
 /*
- * 获得第一个节点
+ * Gets first node in middle order.
  */
 static inline struct _node *
 rbtree_get_first_node( struct _node *root ) 
@@ -118,7 +130,7 @@ rbtree_get_first_node( struct _node *root )
 }
 
 /*
- * 获得最后一个节点
+ * Gets last node in middle order.
  */
 static inline struct _node *
 rbtree_get_last_node( struct _node *root )
@@ -133,7 +145,7 @@ rbtree_get_last_node( struct _node *root )
 }
 
 /*
- * 获得前继节点
+ * Gets predecessor node.
  */
 static inline struct _node *
 rbtree_get_prev_node( struct _node *node )
@@ -155,7 +167,7 @@ rbtree_get_prev_node( struct _node *node )
 }
 
 /* 
- * 树的左旋
+ * Left rotate
  *         x                y
  *        / \              / \
  *       a   y     ==>    x   c
@@ -190,7 +202,7 @@ rbtree_left_rotate( struct _node *root, struct _node *x )
 }
 
 /* 
- * 树的右旋
+ * Rigt rotate
  *          y              x
  *         / \            / \
  *        x   c    ==>   a   y
@@ -225,7 +237,7 @@ rbtree_right_rotate( struct _node* root, struct _node* y )
 }
 
 /*
- * 获得后继节点
+ * Gets successor node.
  */
 static inline struct _node*
 rbtree_get_next_node( struct _node* node )
@@ -250,7 +262,7 @@ rbtree_get_next_node( struct _node* node )
 }
 
 /*
- * 根据key值寻找节点
+ * Find node by key.
  */
 static inline struct _node*
 rbtree_find_node_by_key( struct _node* root, char* key )
@@ -272,8 +284,8 @@ rbtree_find_node_by_key( struct _node* root, char* key )
 }
 
 /*
- * 按照模式匹配方式进行插入时的红黑树平衡算法
- * 非递归方式实现
+ * Implementation of rb-tree inserting balance algorithm by pattern.
+ * None recursion.
  */
 static inline struct _node*
 rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
@@ -287,7 +299,7 @@ rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
             /* 
              *           *g
              *           / \
-             *         p    D    右旋        p
+             *         p    D    RR         p
              *        / \        ==>       / \
              *      n    C              *n    *g
              *     / \                  / \   / \
@@ -301,7 +313,7 @@ rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
             /*
              *       *g                *g
              *       / \               / \
-             *      A   p      右旋    A   n      左旋         n
+             *      A   p      RR     A   n      LR          n
              *         / \     ==>       / \     ==>        / \
              *        n   D             B   p            *g    *p
              *       / \                   / \           / \   / \
@@ -315,7 +327,7 @@ rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
             /* 
              *     *g
              *     / \
-             *    A   p        左旋          p
+             *    A   p        LR           p
              *       / \       ==>         / \
              *      B   n               *g    *n
              *         / \              / \   / \
@@ -329,8 +341,8 @@ rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
             /* 
              *       *g                  *g
              *       / \                 / \
-             *      p   D      左旋      n   D    右         n
-             *     / \         ==      / \       ==>       / \
+             *      p   D      LR       n   D    RR         n
+             *     / \         ==>     / \       ==>       / \
              *    A   n               p   C             *p    *g
              *       / \             / \                / \   / \
              *      B   C           A   B              A   B C   D
@@ -349,8 +361,8 @@ rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
 }
 
 /*
- * 按照模式匹配方式进行删除时的红黑树平衡算法
- * 非递归方式实现
+ * Implementation of rb-tree deleting balance algorithm by pattern.
+ * None recursion.
  */
 static inline struct _node * 
 rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node ) 
@@ -365,14 +377,14 @@ rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node )
         struct _node *s = rbtree_get_sibling_node( d );
         assert( NULL != s );
 
-        if( NULL == p ) { // 达到根节点，调整完毕
+        if( NULL == p ) {
             d->color = BLACK;
             break;
         }
 
-        if( p->left == d ) { // 左子树删除操作
+        if( p->left == d ) { 
             /*      *p                 *s      
-             *      / \       左       / \     
+             *      / \       LR       / \     
              *   **d    s     ==>     p   *c    
              *         / \           / \   
              *       *b   *c      **d   *b  
@@ -385,7 +397,7 @@ rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node )
             /*
              *       p               p       
              *      / \             / \                      l
-             *   **d  *s    右旋  **d   l       左旋         / \
+             *   **d  *s    RR   **d   l       LR         / \
              *        / \   ==>        / \     ==>       *p   *s
              *       l   a            c  *s              / \  / \
              *      / \                  / \           *d   c b  a 
@@ -400,7 +412,7 @@ rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node )
             /*
              *       p              
              *      / \               s
-             *   **d  *s    左旋      / \
+             *   **d  *s    LR       / \
              *        / \   ==>    *p   *r
              *       c   r         / \  / \
              *          / \      *d   c b   a 
@@ -430,7 +442,7 @@ rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node )
         } else {
             /*
              *          *p              *s
-             *          / \      右旋    / \
+             *          / \      RR     / \
              *         s  **d    ==>  *a    p   
              *        / \                  / \
              *      *a  *b               *b  **d 
@@ -443,7 +455,7 @@ rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node )
             /*
              *         p                   
              *        / \                s
-             *      *s  **d   右旋       / \
+             *      *s  **d   RR        / \
              *      / \       ==>     *l    *p
              *     l   c              / \   / \
              *    / \                a   b c   *d 
@@ -458,7 +470,7 @@ rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node )
             /*
              *         p                  p         
              *        / \                / \               r
-             *      *s  **d   左旋       r  **d 右旋       / \
+             *      *s  **d   LR        r  **d  RR        / \
              *      / \       ==>      / \      ==>    *s    *p
              *     a   r             *s   c            / \   / \
              *        / \            / \              a   b c   *d 
@@ -578,18 +590,18 @@ rbtree_remove( RBTree *tree, char *key )
 
     while( TRUE ) {
         struct _node *p = node->parent;
-        if( NULL == node->left) { // 先判断左子树空
-            // 先调整平衡性
+        if( NULL == node->left) { 
+
             tree->root = rbtree_delete_belance_by_pattern( tree->root, node );
 
-            if( NULL == node->right ) { // 这是一个页节点
+            if( NULL == node->right ) { 
                 assert( p != NULL );
                 if( p->left == node )
                     p->left = NULL;
                 else
                     p->right = NULL;
             } else {
-                if( NULL == p ) { // 这是根节点
+                if( NULL == p ) { 
                     tree->root = node->right;
                     tree->root->parent = NULL;
                 } else if( p->left == node ) {
@@ -601,11 +613,11 @@ rbtree_remove( RBTree *tree, char *key )
                 }
             }
             break;
-        } else if( NULL == node->right ) { // 右子树为空
-            // 先调整平衡性
+        } else if( NULL == node->right ) {
+
             tree->root = rbtree_delete_belance_by_pattern( tree->root, node );
 
-            if( NULL == p ) { // 这是根节点
+            if( NULL == p ) { 
                 tree->root = node->left;
                 tree->root->parent = NULL;
             } else if( p->left == node ) {
@@ -617,7 +629,7 @@ rbtree_remove( RBTree *tree, char *key )
             }
             rbtree_free_node( node );
             break;
-        } else { // 左右子树都不为空
+        } else {
             struct _node *tmp = rbtree_get_next_node( node );
             assert( tmp->parent != NULL );
             free( node->key );

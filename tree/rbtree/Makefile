@@ -1,5 +1,4 @@
-# 版权所有 Jagen Zhao (2018)
-# 本代码仅供学习参考，不得用于任何商业用途。
+# Copyright (C) Jagen Zhao (2018)
 
 CC		:= clang
 LD		:= clang

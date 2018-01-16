@@ -1,6 +1,18 @@
 /*
- * 版权所有 Jagen Zhao (2018)
- * 本代码仅供学习参考，不得用于任何商业用途。
+ * Copyrigth (C) Jagen Zhao (2018) jagen.zhao@gmail.com
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This porgram is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY of FITNESS FOR A PARTICULAR PURPOSE. See the 
+ * GNU General Public License for more details.
+ * 
+ * You should hava received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/license/>.
  */
 
 #ifndef __rbtree_H__
@@ -10,90 +22,96 @@
 extern "C" {
 #endif
 
-/** 红黑树数据类型。 */
+/** rb-tree type define。 */
 typedef struct _rbtree RBTree;
 
 /** 
- * 迭代器回调函数定义。 
+ * Iterator callback function.
  * 
- * @param key   访问到的键值。
- * @param data  与键值对应的数据。
+ * @param key   A key of a rb-tree node.
+ * @param data  The data corresponding to the key.
+ * @param udata User data passed to @see rbtree_foreach().
  */
 typedef void (*rbtree_foreach_callback)( char *key, void *data, void *udata );
 
 /**
- * 创建一颗红黑树。
+ * Create a new rb-tree.
  * 
- * @return 成功返回新创建的红黑树对象，否则返回NULL。
+ * @return Successed return a new rb-tree object, otherwise return NULL.
  */
 RBTree* rbtree_create();
 
 /**
- * 销毁一颗红黑树。
+ * Destroy a rb-tree, removes all keys and datas.
  * 
- * @param tree  要销毁的红黑树对象。
+ * @param tree  rb-tree object.
  */
 void rbtree_destory( RBTree* tree );
 
 /**
- * 获取红黑树的节点数。
+ * Gets the number of nodes in a rb-tree.
  * 
- * @param tree  要获取节点数的红黑树对象。
- * @return      返回具体的节点数。
+ * @param tree  A rb-tree object.
+ * @return      The number of nodes in rb-tree.
  */
 int rbtree_get_size( RBTree* tree );
 
 /**
- * 向一颗红黑树中插入数据。
- * 红黑树会自己回收键值与数据的内存使用，插入数据前要复制键值和其对应的数据给红黑树。
+ * Inserts a key/value pair into a rb-tree.
+ * This function would maintain the memory which used for keys and values,
+ * so you must dump them befor passed.
  * 
- * @param key   要插入的键值。
- * @param data  与要插入的键值对应的数据。
- * @return      成功返回0，失败返回-1。
+ * @param tree  A rb-tree object.
+ * @param key   The key to insert.
+ * @param data  The data corresponding to the key.
+ * @return      Successful return 0, otherwise return -1.
  */
 int rbtree_insert( RBTree* tree, char* key, void* data );
 
 /**
- * 从一颗红黑树上删除数据。
- * 红黑树会自己回收删除的键值和其对应的数据所占用的内存。
+ * Removes a key/value pair from a rb-tree.
+ * This function would free the memory which used for key and data.
  * 
- * @param key   要插入删除的键值。
- * @return      成功返回0，失败返回-1。
+ * @param tree  A rb-tree object.
+ * @param key   The key to remove.
+ * @return      Successful return 0, otherwise return -1.
  */
 int rbtree_remove( RBTree* tree, char* key );
 
 /**
- * 获取红黑树中最小的键值。
+ * Gets minimal key in rb-tree.
  * 
- * @param tree  要操作的红黑树对象。
- * @return      成功则返回最小的键值，失败则返回NULL，通常是因为给定的红黑树是空的。
+ * @param tree  A rb-tree object。
+ * @return      Successful return the minimal key, otherwise return NULL 
+ *              because the rb-tree was empty usually.
  */
 char* rbtree_get_first_key( RBTree* tree );
 
 /**
- * 获取红黑树中最大的键值。
+ * Gets maximal key in rb-tree.
  * 
- * @param tree  要操作的红黑树对象。
- * @return      成功则返回最大的键值，失败则返回NULL，通常是因为给定的红黑树是空的。
+ * @param tree  A rb-tree object.
+ * @return      Successful return the maximal key, otherwise return NULL
+ *              because the rb-tree was empty usually.
  */
 char* rbtree_get_last_key( RBTree* tree );
 
 /**
- * 根据键值获取数据。
+ * Looikng for data corresponding to the key.
  * 
- * @param tree  要操作的红黑树对象。
- * @param key   要获取数据的键值。
- * @return      成功则返回给定键值所对应的数据，失败则返回NULL。
- *              失败通常是因为给定的红黑树是空的或无法找到给定的键值。
+ * @param tree  A rb-tree object.
+ * @param key   The key to search.
+ * @return      Successful return the data corresponding to the key.
+ *              Otherwise return NULL.
  */
 void* rbtree_find_by_key( RBTree* tree, char* key );
 
 /**
- * 迭代访问给定的红黑树中的每一个节点。中序遍历。
+ * Accesses all nodes in rb-tree in middle order.
  * 
- * @param tree  要操作的红黑树对象。
- * @param fun   迭代器回调函数。
- * @param udata 附带的数据，会直接传递回调函数。
+ * @param tree  A rb-tree object.
+ * @param fun   Iteraotr callback function.
+ * @param udata User data to passed to function.
  */
 void rbtree_foreach( RBTree* tree, rbtree_foreach_callback fun, void *udata );
 
