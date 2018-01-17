@@ -34,6 +34,19 @@
 #define BLACK   1
 #define D_BLACK 2
 
+/*
+ * A red-black tree(RBT) is a binary search tree that satisfies 
+ * the following red-black properties:
+ * 1. Every node has a color that is either red or black.
+ * 2. Every leaf is black.
+ * 3. If a node is red, both children are black.
+ * 4. Every path from a given node down to any descendant leaf contains 
+ *    the same number of black nodes. The number of black nodes on souch
+ *    a path (not including the inital node but includeing leaves) is 
+ *    called the black-height (bh) of the node.
+ * 5. The root of the tree is black (not a CLRS property, but should be).
+ */
+
 struct _rbtree {
     struct _node   *root;
     int             size;
@@ -90,7 +103,7 @@ rbtree_get_sibling_node( struct _node *node )
     struct _node *p = node->parent;
     if( NULL == p ) return NULL;
 
-    return p->left == node ? p->right : p->right;
+    return p->left == node ? p->right : p->left;
 }
 
 /*
@@ -202,7 +215,7 @@ rbtree_left_rotate( struct _node *root, struct _node *x )
 }
 
 /* 
- * Rigt rotate
+ * Right rotate
  *          y              x
  *         / \            / \
  *        x   c    ==>   a   y
@@ -284,11 +297,113 @@ rbtree_find_node_by_key( struct _node* root, char* key )
 }
 
 /*
+ * Implementation of rb-tree inserting balance algorithm by CLRS.
+ * This algorithm is more efficient.
+ * None recursion
+ */
+static inline struct _node *
+rbtree_insert_balance_by_CLRS( struct _node *root, struct _node *new_node )
+{
+    struct _node *n = new_node;
+    struct _node *g = NULL;
+
+    while( (g=rbtree_get_grandparent_node( n ) ) != NULL ) {
+        struct _node *p = n->parent;
+        struct _node *u = rbtree_get_uncle_node( n );
+        if( n->color == RED && p->color == RED ) {
+            /*
+             *      *g           g           *g           g            
+             *      / \         / \          / \         / \  
+             *     p   b  ==> *p  *b  or    p   b  ==> *p  *b  
+             *    / \         / \          / \         / \    
+             *   n  *a       n  *a       *a   n      *a   n 
+             *                        or 
+             *    *g            g          *g            g     
+             *    / \          / \         / \          / \    
+             *   a   p   ==> *a  *p   or  a   p  ==>  *a  *p    
+             *      / \          / \         / \          / \   
+             *    *b   n       *b   n       n  *b       *n  *b   
+             */
+            if( NULL != u && u->color == RED ) {
+                u->color = BLACK;
+                p->color = BLACK;
+                g->color = RED;
+                n = g;
+            }
+            /* 
+             *           *g
+             *           / \
+             *         p    D    RR        *p
+             *        / \        ==>       / \
+             *      n    C               n     g
+             *     / \                  / \   / \
+             *    A   B                A   B C   D
+             */             
+            else if( p->left == n && g->left == p ) {
+                root = rbtree_right_rotate( root, g );
+                p->color = BLACK;
+                g->color = RED;
+                break;
+            }
+            /*
+             *       *g                *g
+             *       / \               / \
+             *      A   p      RR     A   n      LR         *n
+             *         / \     ==>       / \     ==>        / \
+             *        n   D             B   p             g     p
+             *       / \                   / \           / \   / \
+             *      B   C                 C   D         A   B C   D
+             */             
+            else if( p->left == n && g->right == p ) {
+                rbtree_right_rotate( root, p );
+                root = rbtree_left_rotate( root, g );
+                n->color = BLACK;
+                g->color = RED;
+                break;
+            }
+            /* 
+             *     *g
+             *     / \
+             *    A   p        LR          *p
+             *       / \       ==>         / \
+             *      B   n                g     n
+             *         / \              / \   / \
+             *        C   D            A   B C   D
+             */             
+            else if( p->right == n && g->right == p ) {
+                root = rbtree_left_rotate( root, g );
+                p->color = BLACK;
+                g->color = RED;
+                break;
+            }
+            /* 
+             *       *g                  *g
+             *       / \                 / \
+             *      p   D      LR       n   D    RR        *n
+             *     / \         ==>     / \       ==>       / \
+             *    A   n               p   C              p     g
+             *       / \             / \                / \   / \
+             *      B   C           A   B              A   B C   D
+             */ 
+            else if( p->right == n && g->left == p ) {
+                rbtree_left_rotate( root, p );
+                root = rbtree_right_rotate( root, g );
+                n->color = BLACK;
+                g->color = RED;
+                break;
+            }            
+        } else return root;
+    }
+
+    return root;
+}
+
+/*
  * Implementation of rb-tree inserting balance algorithm by pattern.
  * None recursion.
  */
 static inline struct _node*
-rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
+rbtree_insert_balance_by_pattern( struct _node *root, struct _node *new_node )
 {
     struct _node *n = new_node;
     struct _node *g = NULL;
@@ -353,8 +468,7 @@ rbtree_insert_balance_by_pattern( struct _node* root, struct _node* new_node )
                 p->color    = BLACK;
             }
             root->color = BLACK;
-        } else
-            return root;
+        } else return root;
     }
     
     return root;
@@ -504,6 +618,21 @@ rbtree_delete_belance_by_pattern( struct _node *root, struct _node *node )
     return root;
 }
 
+/*
+ * Destorys a tree.
+ */
+static inline void
+rbtree_destory_internal( struct _node *node ) {
+    if( NULL == node ) {
+        return;
+    }
+
+    rbtree_destory_internal( node->left );
+    rbtree_destory_internal( node->right );
+    
+    rbtree_free_node( node );
+}
+
 RBTree *  
 rbtree_create()
 {
@@ -515,6 +644,15 @@ rbtree_create()
     tree->size = 0;
 
     return tree;
+}
+
+void
+rbtree_destory( RBTree *tree ) {
+    if( NULL == tree )
+        return;
+    rbtree_destory_internal( tree->root );
+
+    free( tree );
 }
 
 int 
@@ -566,7 +704,7 @@ rbtree_insert( RBTree *tree, char *key, void *data )
         }
     }
 
-    tree->root = rbtree_insert_balance_by_pattern( tree->root, node );
+    tree->root = rbtree_insert_balance_by_CLRS( tree->root, node );
     return 0;
 }
 

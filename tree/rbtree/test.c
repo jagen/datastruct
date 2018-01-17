@@ -90,5 +90,8 @@ int main()
     printf( "first key is: %s\n", rbtree_get_first_key( tree ) );
     printf( "last key is: %s\n", rbtree_get_last_key( tree ) );    
     rbtree_foreach( tree, foreach_callback, NULL );
+
+    rbtree_destory( tree );
+    
     return 0;
 }
