@@ -32,21 +32,21 @@ typedef struct _rbtree RBTree;
  * @param data  The data corresponding to the key.
  * @param udata User data passed to @see rbtree_foreach().
  */
-typedef void (*rbtree_foreach_callback)( char *key, void *data, void *udata );
+typedef void (*rbtree_foreach_callback)(char *key, void *data, void *udata);
 
 /**
  * Create a new rb-tree.
  * 
  * @return Successed return a new rb-tree object, otherwise return NULL.
  */
-RBTree* rbtree_create();
+RBTree *rbtree_create();
 
 /**
  * Destroy a rb-tree, removes all keys and datas.
  * 
  * @param tree  rb-tree object.
  */
-void rbtree_destory( RBTree* tree );
+void rbtree_destory(RBTree *tree);
 
 /**
  * Gets the number of nodes in a rb-tree.
@@ -54,11 +54,11 @@ void rbtree_destory( RBTree* tree );
  * @param tree  A rb-tree object.
  * @return      The number of nodes in rb-tree.
  */
-int rbtree_get_size( RBTree* tree );
+int rbtree_get_size(RBTree *tree);
 
 /**
  * Inserts a key/value pair into a rb-tree.
- * This function would maintain the memory which used for keys and values,
+ * This function would maintain the memory which used by key and value,
  * so you must dump them befor passed.
  * 
  * @param tree  A rb-tree object.
@@ -66,7 +66,7 @@ int rbtree_get_size( RBTree* tree );
  * @param data  The data corresponding to the key.
  * @return      Successful return 0, otherwise return -1.
  */
-int rbtree_insert( RBTree* tree, char* key, void* data );
+int rbtree_insert(RBTree *tree, char *key, void *data);
 
 /**
  * Removes a key/value pair from a rb-tree.
@@ -76,7 +76,7 @@ int rbtree_insert( RBTree* tree, char* key, void* data );
  * @param key   The key to remove.
  * @return      Successful return 0, otherwise return -1.
  */
-int rbtree_remove( RBTree* tree, char* key );
+int rbtree_remove(RBTree *tree, char *key);
 
 /**
  * Gets minimal key in rb-tree.
@@ -85,7 +85,7 @@ int rbtree_remove( RBTree* tree, char* key );
  * @return      Successful return the minimal key, otherwise return NULL 
  *              because the rb-tree was empty usually.
  */
-char* rbtree_get_first_key( RBTree* tree );
+char *rbtree_get_first_key(RBTree *tree);
 
 /**
  * Gets maximal key in rb-tree.
@@ -94,7 +94,7 @@ char* rbtree_get_first_key( RBTree* tree );
  * @return      Successful return the maximal key, otherwise return NULL
  *              because the rb-tree was empty usually.
  */
-char* rbtree_get_last_key( RBTree* tree );
+char *rbtree_get_last_key(RBTree *tree);
 
 /**
  * Looikng for data corresponding to the key.
@@ -104,7 +104,7 @@ char* rbtree_get_last_key( RBTree* tree );
  * @return      Successful return the data corresponding to the key.
  *              Otherwise return NULL.
  */
-void* rbtree_find_by_key( RBTree* tree, char* key );
+void *rbtree_find_by_key(RBTree *tree, char *key);
 
 /**
  * Accesses all nodes in rb-tree in middle order.
@@ -113,7 +113,7 @@ void* rbtree_find_by_key( RBTree* tree, char* key );
  * @param fun   Iteraotr callback function.
  * @param udata User data to passed to function.
  */
-void rbtree_foreach( RBTree* tree, rbtree_foreach_callback fun, void *udata );
+void rbtree_foreach(RBTree *tree, rbtree_foreach_callback fun, void *udata);
 
 #ifdef __cplusplus
 }
