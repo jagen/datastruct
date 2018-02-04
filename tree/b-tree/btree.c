@@ -94,15 +94,15 @@ static inline void btree_free_node(struct _node *node)
 
 // Ordered insert a key into node.
 static inline void btree_node_insert(struct _node *node, int i, 
-                            char *key, struct _node *n)
+                            char *key, int ci, struct _node *n)
 {
     memmove(node->keys + i + 1, node->keys + i, 
         sizeof(void *) * (node->k_count - i));
     
     if (n) { // With child.
-        memmove(node->children + i + 1, node->children + i, 
-                sizeof(void *) * (node->c_count - i));
-        node->children[i] = n;
+        memmove(node->children + ci + 1, node->children + ci, 
+                sizeof(void *) * (node->c_count - ci));
+        node->children[ci] = n;
         node->c_count++;
     }
 
@@ -111,7 +111,7 @@ static inline void btree_node_insert(struct _node *node, int i,
 }
 
 // Ordered remove a key from node.
-static inline void btree_node_remove(struct _node *node, int i)
+static inline void btree_node_remove(struct _node *node, int i, int ci)
 {
     free(node->keys[i]);
     node->keys[i] = NULL;
@@ -121,10 +121,10 @@ static inline void btree_node_remove(struct _node *node, int i)
     node->keys[node->k_count] = NULL;
     
     if (node->c_count > 0) {
-        node->children[i] = NULL;
+        node->children[ci] = NULL;
         node->c_count--;
-        memmove(node->children + i, node->children + i + 1, 
-            sizeof(void *) * (node->c_count - i));
+        memmove(node->children + ci, node->children + ci + 1, 
+            sizeof(void *) * (node->c_count - ci));
         node->children[node->c_count] = NULL;
     }
 }
@@ -160,7 +160,7 @@ static inline void btree_split_child(struct _node *r, int i, int d)
     struct _node *n = btree_create_node( d );
     size_t m = c->k_count / 2;
 
-    btree_node_insert(r, i, c->keys[m], n);
+    btree_node_insert(r, i, c->keys[m], i, n);
 
     memmove(n->keys, c->keys, sizeof(void *) * m);
     memmove(c->keys, c->keys + m + 1, sizeof(void *) * m);
@@ -211,7 +211,7 @@ static inline int btree_merge_children(struct _node *r, int i)
     int ret = 0;
     void *key = r->keys[i];
     r->keys[i] = NULL;
-    btree_node_remove(r, i);
+    btree_node_remove(r, i, i);
 
     if (r->k_count== 0) { 
         // If root node is empty, 
@@ -317,14 +317,16 @@ int btree_insert(BTree *tree, char *key)
         r->k_count = 1;
         tree->root = r;
         tree->size++;
+        tree->heigh= 1;
         return 0;
     }
 
-    if (r->k_count == max) {
+    if (r->k_count == max) {  // tree grow.
         struct _node *s = btree_create_node(tree->degree);
         s->children[0] = r;
         s->c_count     = 1;
         btree_split_child(s, 0, tree->degree);
+        tree->heigh++;
         tree->root = r = s;
     }
 
@@ -340,7 +342,7 @@ int btree_insert(BTree *tree, char *key)
                     return 0;
                 }
             }
-            btree_node_insert(r, i, key, NULL);
+            btree_node_insert(r, i, key, i, NULL);
             tree->size++;
             return 0;
         } else {
@@ -378,7 +380,7 @@ int btree_remove(BTree *tree, char *key)
             else if (c > 0) n = r->children[++i];
             else {
                 if (r->c_count == 0) {
-                    btree_node_remove(r, i);
+                    btree_node_remove(r, i, i);
                     tree->size--;
                     return 0;
                 } else {
@@ -396,7 +398,7 @@ int btree_remove(BTree *tree, char *key)
                         f->keys[0] = key;
                         n = z;
                     } else {
-                        (r->k_count == 1) ? (n = r) : (r = z);
+                        (r->k_count == 1) ? (n = r) : (n = z);
                         i = btree_merge_children(r, i);
                     }
                 }
@@ -408,15 +410,17 @@ int btree_remove(BTree *tree, char *key)
             struct _node *sr = i < tree->degree * 2 - 1 ? 
                                 r->children[i + 1] : NULL;
             if (sl && sl->k_count >= tree->degree) {
-                btree_node_insert(n, 0, r->keys[i], sl->children[sl->k_count]);
-                r->keys[i] = sl->keys[sl->k_count - 1];
+                btree_node_insert(n, 0, r->keys[i - 1], 
+                                    0, sl->children[sl->k_count]);
+                r->keys[i - 1] = sl->keys[sl->k_count - 1];
                 sl->keys[sl->k_count - 1] = NULL;
-                btree_node_remove(sl, sl->k_count - 1);
+                btree_node_remove(sl, sl->k_count - 1, sl->k_count);
             } else if (sr && sr->k_count >= tree->degree) {
-                btree_node_insert(n, n->k_count, r->keys[i], sr->children[0]);
+                btree_node_insert(n, n->k_count, r->keys[i], 
+                                    n->k_count + 1, sr->children[0]);
                 r->keys[i] = sr->keys[0];
                 sr->keys[0] = NULL;
-                btree_node_remove(sr, 0);
+                btree_node_remove(sr, 0, 0);
             } else {
                 btree_merge_children(r, (i < r->k_count) ? i : i - 1);
                 continue;

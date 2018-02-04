@@ -26,7 +26,7 @@ typedef struct _btree BTree;
 /**
  * Create a new B-Tree object.
  * 
- * @param degreem   Minimum number of keys of every non-leaf node，
+ * @param degreem   Minimum number of children of every non-leaf node，
  *                  except for root node.
  */
 BTree * btree_create( int degree );

@@ -5,7 +5,7 @@
 
 int main()
 {
-    BTree *bt = btree_create(3);
+    BTree *bt = btree_create(5);
     btree_insert(bt, strdup("G"));
     btree_insert(bt, strdup("M"));
     btree_insert(bt, strdup("P"));
