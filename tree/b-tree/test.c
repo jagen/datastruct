@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "btree.h"
+#include "bptree-linuxlike.h"
 
 int main()
 {
@@ -56,6 +57,26 @@ int main()
     printf("W is in b-tree : %d\n", btree_search(bt, "W"));
     printf("L is in b-tree : %d\n", btree_search(bt, "L"));
     printf("4 is in b-tree : %d\n", btree_search(bt, "4"));
+
+    struct bptree_head bptree;
+    bptree_init(&bptree);
+
+    bptree_insert(&bptree, &bptree_geo64, 1UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 2UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 3UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 4UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 5UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 6UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 7UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 8UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 9UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 10UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 11UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 12UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 13UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 14UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 15UL, malloc(sizeof(long)));
+    bptree_insert(&bptree, &bptree_geo64, 16UL, malloc(sizeof(long)));
 
     return 0;
 }

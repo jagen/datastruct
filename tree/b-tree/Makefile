@@ -6,7 +6,7 @@ LDFLAGS :=
 
 all:btree
 
-btree:test.o btree.o
+btree:test.o btree.o bptree-linuxlike.o bptree.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 %.o:%.c

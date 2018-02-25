@@ -5,16 +5,22 @@
 extern "C" {
 #endif
 
-typedef struct _bstree BSTree;
+struct bstree *bstree_create();
+void bstree_destory(struct bstree* tree);
+int bstree_insert(struct bstree *tree, int key);
+int bstree_insert_recursion(struct bstree *tree, int key);
+int bstree_remove(struct bstree *tree, int key);
+int bstree_find_by_key(const struct bstree *tree, int key);
+struct bsnode *bstree_get_first(const struct bstree *tree);
+struct bsnode *bstree_get_last(const struct bstree *tree);
+struct bsnode *bstree_get_next(const struct bsnode *node);
+struct bsnode *bstree_get_prev(const struct bsnode *node);
+int bstree_get_node_key(const struct bsnode *node);
 
-BSTree* bstree_create();
-void bstree_destory( BSTree* tree );
-int bstree_get_size( BSTree* tree );
-int bstree_insert( BSTree* tree, char* key, void* data );
-int bstree_remove( BSTree* tree, char* key );
-char* bstree_get_first_key( BSTree* tree );
-char* bstree_get_last_key( BSTree* tree );
-void* bstree_find_by_key( BSTree* tree, char* key );
+#define bstree_for_each(tree, node)     \
+    for (node = bstree_get_first(tree); \
+         node;                          \
+         node = bstree_get_next(node))
 
 #ifdef __cplusplus
 }

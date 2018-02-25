@@ -5,232 +5,240 @@
 #include <assert.h>
 #include "bstree.h"
 
-struct _bstree {
-    struct _node*   root;
-    int             size;
+struct bstree {
+    struct bsnode*  root;
 };
 
-struct _node {
-    struct _node*   left;
-    struct _node*   right;
-    struct _node*   parent;
-    char*           key;
-    void*           data;
+struct bsnode {
+    struct bsnode   *left;
+    struct bsnode   *right;
+    struct bsnode   *parent;
+    int             key;
 };
 
-// 创建新的节点
-static inline struct _node* 
-bstree_create_node( char* key, void* data )
+// Create a new node.
+static inline struct bsnode *bstree_create_node(int key)
 {
-    struct _node *node = (struct _node*)malloc( sizeof( struct _node ));
-    if( NULL == node )
+    struct bsnode *node = (struct bsnode *)malloc(sizeof(struct bsnode));
+    if (!node)
         return NULL;
 
     node->left = node->right = node->parent =  NULL;
     node->key = key;
-    node->data = data;
 
     return node;
 }
 
-// 释放节点
-static inline void 
-bstree_free_node( struct _node *node )
+// Free a node
+static inline void bstree_free_node(struct bsnode *node)
 {
-    if( NULL == node )
-        return;
-
-    free( node->key );
-    free( node->data );
     free( node );
 }
 
-// 获得第一个节点
-static inline struct _node*
-bstree_get_first_node( struct _node* root ) 
+// Get the first node with in-order traversal.
+static struct bsnode *__bstree_get_first(const struct bsnode *root)
 {
-    struct _node* node = root;
-    if( NULL == node )
+    if (!root)
         return NULL;
-
-    while(node->left) {
-        node = node->left;
-    }
-    return node;
+    while (root->left)
+        root = root->left;
+    return (struct bsnode *)root;
 }
 
-// 获得最后一个节点
-static inline struct _node*
-bstree_get_last_node( struct _node* root )
+// Get the last node with in-order traversal.
+static struct bsnode *__bstree_get_last(const struct bsnode *root)
 {   
-    struct _node* node = root;
-    if( NULL == node )
+    if (!root)
         return NULL;
-
-    while( node->right ) {
-        node = node->right;
-    }
-    return node;
+    while (root->right)
+        root = root->right;
+    return (struct bsnode *)root;
 }
 
-// 获得前继节点
-static inline struct _node*
-bstree_get_prev_node( struct _node* node )
+// Get the prev node with in-order traversal.
+static struct bsnode *__bstree_get_prev(const struct bsnode *node)
 {
-    if( NULL == node )
+    if (!node)
         return NULL;
     
-    if( NULL == node->left ) {
-        while( NULL != node->parent ) {
-            struct _node *p = node->parent;
-            if( p->left == node ) {
-                node = p;
-                continue;
-            } else {
-                return p;
-            }
-        }
-        return NULL;
-    }
-    
-    return bstree_get_last_node( node->left );
-}
-
-// 获得后继节点
-static inline struct _node*
-bstree_get_next_node( struct _node* node )
-{
-    if( NULL == node )
-        return NULL;
-
-    if( NULL == node->right ) {
-        while( NULL != node->parent ) {
-            struct _node* p = node->parent;
-            if( p->right == node ) {
-                node = p;
-                continue;
-            } else {
-                return p;
-            }
-        }
-        return NULL;
+    if (!node->left) {
+        struct bsnode *p = NULL;
+        while ((p = node->parent) && node == p->left)
+            node = p;
+        return p;
     }
 
-    return bstree_get_first_node( node->right );
+    return __bstree_get_last(node->left);
 }
 
-// 根据key值寻找节点
-static inline struct _node*
-bstree_find_node_by_key( struct _node* root, char* key )
+// Get the next node with in-order traversal.
+static struct bsnode *__bstree_get_next(const struct bsnode *node)
 {
-    if( NULL == root )
+    if (!node)
         return NULL;
 
-    struct _node* node = root;
-    while( NULL != node ) {
-        int c = strcmp( key, node->key );
-        if( c == 0 )
-            return node;
-        else if( c < 0 )
-            node = node->left;
-        else 
-            node = node->right;
+    if (!node->right) {
+        struct bsnode *p = NULL;
+        while ((p = node->parent) && node == p->right)
+            node = p;
+        return p;
     }
-    return NULL;
+    return __bstree_get_first(node->right);
 }
 
-BSTree* 
-bstree_create()
+// Insert a new node by recursion method.
+static int __bstree_insert_r(struct bsnode **node, struct bsnode *p, int key)
 {
-    BSTree* tree = (BSTree*)malloc( sizeof( BSTree ) );
-    if( NULL == tree )
-        return NULL;
-    
-    tree->root = NULL;
-    tree->size = 0;
-
-    return tree;
-}
-
-int bstree_insert( BSTree* tree, char* key, void* data )
-{
-    if( NULL == tree )
-        return -1;
-
-    if( NULL == tree->root ) {
-        tree->root = bstree_create_node( key, data );
-        if( NULL == tree->root )
-            return -1;
-        ++tree->size;
+    if (!*node) {
+        *node = bstree_create_node(key);
+        (*node)->parent = p;
         return 0;
     }
 
-    struct _node *node = tree->root;
-    while( 1 ) {
-        int c = strcmp( key, node->key );
-        if( 0 == c ) {
-            free( node->key );
-            free( node->data );
-            node->key = key;
-            node->data = data;
-            return 0;
-        } else if( 0 < c ) {
-            if( NULL != node->right ) {
-                node = node->right;
-                continue;
-            }
-
-            node->right = bstree_create_node( key, data );
-            node->right->parent = node;
-            ++tree->size;
-            return 0;
-        } else {
-            if( NULL != node->left ) {
-                node = node->left;
-                continue;
-            }
-
-            node->left = bstree_create_node( key, data );
-            node->left->parent = node;
-            ++tree->size;
-            return 0;
-        }
-    }
+    if (key < (*node)->key)
+        return __bstree_insert_r(&(*node)->left, *node, key);
+    else if (key > (*node)->key)
+        return __bstree_insert_r(&(*node)->right, *node, key);
 
     return -1;
 }
 
-int bstree_remove( BSTree *tree, char *key )
+// Insert a new node by iteration method.
+static int __bstree_insert_i(struct bsnode **root, struct bsnode *new)
 {
-    if( NULL == tree && NULL == tree->root )
-        return -1;
+    if (!new) return -1;
 
-    struct _node* node = bstree_find_node_by_key( tree->root, key );
-    if( NULL == node )
-        return -1;
+    struct bsnode *parent = NULL;
+    int key = new->key;
 
-    if( 1 == tree->size  ) {
-        assert( tree->root == node );
-        bstree_free_node( tree->root );
-        tree->root = NULL;
-        --tree->size;
-        return 0;
+    while (*root) {
+        parent = *root;
+        if (key < parent->key)
+            root = &parent->left;
+        else if(key > parent->key)
+            root = &parent->right;
+        else return -1;
     }
 
-    struct _node* p = node->parent;
+    new->parent = parent;
+    *root = new;
 
-    if( NULL == node->left) { // 先判断左子树空
-        if( NULL == node->right ) { // 这是一个页节点
-            assert( p != NULL );
-            if( p->left == node )
+    return 0;
+};   
+
+// Find a node by key.
+static struct bsnode *__bstree_find_by_key(const struct bsnode *root, int key)
+{
+    if (!root)
+        return NULL;
+
+    while (root) {
+        if (key < root->key)
+            root = root->left;
+        else if (key > root->key)
+            root = root->right;
+        else 
+            return (struct bsnode *)root;
+    }
+    return NULL;
+}
+
+void pre_order_traversal(struct bsnode *root)
+{
+    if (!root) 
+        return;
+    printf( "key = %d\n", root->key);
+    pre_order_traversal(root->left);
+    pre_order_traversal(root->right);
+}
+
+void in_order_traversal(struct bsnode *root)
+{
+    if (!root) 
+        return;
+    in_order_traversal(root->left);
+    printf("key = %d\n", root->key);
+    in_order_traversal(root->right);
+}
+
+void post_order_traversal(struct bsnode *root)
+{
+    if (!root) 
+        return;
+    post_order_traversal(root->left);
+    post_order_traversal(root->right);
+    printf("key = %d\n", root->key);
+}
+
+struct bstree *bstree_create()
+{
+    struct bstree *tree = (struct bstree *)malloc(sizeof(struct bstree));
+    if (!tree)
+        return NULL;
+    tree->root = NULL;
+    return tree;
+}
+
+int bstree_insert_recursion(struct bstree *tree, int key)
+{
+    if (!tree)
+        return -1;
+    return __bstree_insert_r(&tree->root, NULL, key);
+}
+
+int bstree_insert(struct bstree *tree, int key)
+{
+    if (!tree) 
+        return -1;
+    return __bstree_insert_i(&tree->root, bstree_create_node(key));
+}
+
+struct bsnode *bstree_get_first(const struct bstree *tree)
+{
+    if (!tree)
+        return NULL;
+    return __bstree_get_first(tree->root);
+}
+
+struct bsnode *bstree_get_last(const struct bstree *tree)
+{
+    if (!tree)
+        return NULL;
+    return __bstree_get_last(tree->root);
+}
+
+struct bsnode *bstree_get_prev(const struct bsnode *node)
+{
+    return __bstree_get_prev(node);
+}
+
+struct bsnode *bstree_get_next(const struct bsnode *node)
+{
+    return __bstree_get_next(node);
+}
+
+int bstree_remove(struct bstree *tree, int key)
+{
+    if (NULL == tree && NULL == tree->root)
+        return -1;
+
+    struct bsnode* node = __bstree_find_by_key(tree->root, key);
+    if (NULL == node)
+        return -1;
+    struct bsnode* p = node->parent;
+
+    if (NULL == node->left) { // 先判断左子树空
+        if (NULL == node->right) { // 这是一个页节点
+            assert(p != NULL);
+            if (p->left == node)
                 p->left = NULL;
             else
                 p->right = NULL;
         } else {
-            if( NULL == p ) { // 这是根节点
+            if (NULL == p) { // 这是根节点
                 tree->root = node->right;
                 tree->root->parent = NULL;
-            } else if( p->left == node ) {
+            } else if (p->left == node) {
                 p->left = node->right;
                 p->left->parent = p;
             } else {
@@ -238,11 +246,11 @@ int bstree_remove( BSTree *tree, char *key )
                 p->right->parent = p;
             }
         }
-    } else if( NULL == node->right ) { // 右子树为空
-        if( NULL == p ) { // 这是根节点
+    } else if (NULL == node->right) { // 右子树为空
+        if (NULL == p) { // 这是根节点
             tree->root = node->left;
             tree->root->parent = NULL;
-        } else if( p->left == node ) {
+        } else if (p->left == node) {
             p->left = node->left;
             p->left->parent = p;
         } else {
@@ -250,13 +258,13 @@ int bstree_remove( BSTree *tree, char *key )
             p->right->parent = p;
         }
     } else { // 左右子树都不为空
-        struct _node* tmp = bstree_get_next_node( node );
-        assert( tmp->parent != NULL );
+        struct bsnode* tmp = __bstree_get_next(node);
+        assert(tmp->parent != NULL);
 
         // 这个节点不可能存在左子树。
-        if( tmp->parent->left == tmp ) {  // 在左子树上
+        if (tmp->parent->left == tmp) {  // 在左子树上
             tmp->parent->left = tmp->right;
-            if( NULL != tmp->right ) // 右子树不为空
+            if(NULL != tmp->right) // 右子树不为空
                 tmp->right->parent = tmp->parent;
             tmp->left = node->left;
             tmp->left->parent = tmp;
@@ -268,120 +276,84 @@ int bstree_remove( BSTree *tree, char *key )
             tmp->parent = p;
         }
 
-        if( NULL == p )
+        if (NULL == p)
             tree->root = tmp;
     }
 
-    bstree_free_node( node );
-    --tree->size;
+    bstree_free_node(node);
     return 0;
 }
 
-void* bstree_find_by_key( BSTree* tree, char* key ) 
+int bstree_find_by_key(const struct bstree *tree, int key)
 {
-    if( NULL == tree )
-        return NULL;
-
-    struct _node* node = bstree_find_node_by_key( tree->root, key );
-    if( NULL == node )
-        return NULL;
-
-    return node->data;
-}
-
-int bstree_get_size( BSTree* tree )
-{
-    if( NULL == tree ) 
+    if (!tree)
         return -1;
-
-    return tree->size;
-}
-
-char* bstree_get_first_key( BSTree* tree ) 
-{
-    if( NULL == tree )
-        return NULL;
-    
-    struct _node* node = bstree_get_first_node( tree->root );
-    if( NULL == node )
-        return NULL;
-    
-    return node->key;
-}
-
-char* bstree_get_last_key( BSTree* tree )
-{
-    if( NULL == tree )
-        return NULL;
-
-    struct _node* node = bstree_get_last_node( tree->root );
-    if( NULL == node )
-        return NULL;
-
-    return node->key;
+    if (__bstree_find_by_key(tree->root, key))
+        return 0;
+    return -1;
 }
 
 int main( int argc, char* argv[] )
 {
-    BSTree *tree = bstree_create();
-    bstree_insert( tree, strdup("5"), strdup("五") );
-    bstree_insert( tree, strdup("2"), strdup("二") );
-    bstree_insert( tree, strdup("1"), strdup("一") );
-    bstree_insert( tree, strdup("4"), strdup("四") );
-    bstree_insert( tree, strdup("3"), strdup("三") );
-    bstree_insert( tree, strdup("9"), strdup("九") );
-    bstree_insert( tree, strdup("7"), strdup("七") );
-    bstree_insert( tree, strdup("8"), strdup("八") );
-    bstree_insert( tree, strdup("6"), strdup("六") );
-    printf( "node count: %d\n", bstree_get_size( tree ) );
-    printf( "first key is: %s\n", bstree_get_first_key( tree ) );
-    printf( "last key is: %s\n", bstree_get_last_key( tree ) );
+    struct bstree *tree = bstree_create();
+    bstree_insert(tree, 7);
+    bstree_insert(tree, 8);
+    bstree_insert(tree, 9);
+    bstree_insert(tree, 4);
+    bstree_insert(tree, 3);
+    bstree_insert(tree, 6);
+    bstree_insert(tree, 5);
+    bstree_insert(tree, 1);
+    bstree_insert(tree, 2);
+    printf("first key is: %d\n", bstree_get_first(tree)->key);
+    printf("last key is: %d\n", bstree_get_last(tree)->key);
 
-    struct _node* node = bstree_get_first_node( tree->root );
-    while( NULL != node ) {
-        printf( "key: %s, data: %s\n", node->key, (char*)node->data );
-        node = bstree_get_next_node( node );
+    struct bsnode* node = NULL;
+    bstree_for_each(tree, node) {
+        printf( "key: %d\n", node->key);
+    }
+    
+    printf("key=1  %d\n", bstree_find_by_key(tree, 1));
+
+    printf("--------------------------------\n");
+
+    bstree_insert(tree, 5);
+    bstree_insert(tree, 8);
+    printf("first key is: %d\n", bstree_get_first(tree)->key );
+    printf("last key is: %d\n", bstree_get_last(tree)->key );
+
+    bstree_for_each(tree, node) {
+        printf( "key: %d\n", node->key);
     }
 
-    void* data = bstree_find_by_key( tree, "3" );
-    printf( "key=3 and data is: %s\n", (char*)data );
+    printf("-----------pre-order traversal---------------------\n");
+    pre_order_traversal(tree->root);
 
-    printf( "--------------------------------\n" );
+    printf("-----------in-order traversal----------------------\n");
+    in_order_traversal(tree->root);
 
-    bstree_insert( tree, strdup("5"), strdup("五") );
-    bstree_insert( tree, strdup("8"), strdup("八") );
-    printf( "node count: %d\n", bstree_get_size( tree ) );
-    printf( "first key is: %s\n", bstree_get_first_key( tree ) );
-    printf( "last key is: %s\n", bstree_get_last_key( tree ) );
+    printf("-----------post-order traversal--------------------\n");
+    post_order_traversal(tree->root);
 
-    node = bstree_get_first_node( tree->root );
-    while( NULL != node ) {
-        printf( "key: %s, data: %s\n", node->key, (char*)node->data );
-        node = bstree_get_next_node( node );
+    printf("--------------------------------\n");
+    bstree_remove( tree, 5 );
+    bstree_for_each(tree, node)
+        printf( "key: %d\n", node->key);
+
+    printf("--------------------------------\n");
+    bstree_remove(tree, 6);
+    node = bstree_get_first(tree);
+    while (NULL != node) {
+        printf( "key: %d\n", node->key);
+        node = bstree_get_next(node);
     }
 
-    printf( "--------------------------------\n" );
-    bstree_remove( tree, "5" );
-    node = bstree_get_first_node( tree->root );
+    printf("--------------------------------\n");
+    bstree_remove(tree, 9);
+    node = bstree_get_first(tree);
     while( NULL != node ) {
-        printf( "key: %s, data: %s\n", node->key, (char*)node->data );
-        node = bstree_get_next_node( node );
-    }
-
-    printf( "--------------------------------\n" );
-    bstree_remove( tree, "6" );
-    node = bstree_get_first_node( tree->root );
-    while( NULL != node ) {
-        printf( "key: %s, data: %s\n", node->key, (char*)node->data );
-        node = bstree_get_next_node( node );
-    }
-
-    printf( "--------------------------------\n" );
-    bstree_remove( tree, "9" );
-    node = bstree_get_first_node( tree->root );
-    while( NULL != node ) {
-        printf( "key: %s, data: %s\n", node->key, (char*)node->data );
-        node = bstree_get_next_node( node );
+        printf("key: %d\n", node->key);
+        node = bstree_get_next(node);
     }
 
     return 0;
