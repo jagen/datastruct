@@ -15,12 +15,29 @@ struct bs_node *bstree_get_first(const struct bs_tree *tree);
 struct bs_node *bstree_get_last(const struct bs_tree *tree);
 struct bs_node *bstree_get_next(const struct bs_node *node);
 struct bs_node *bstree_get_prev(const struct bs_node *node);
+struct bs_node *bstree_get_first_postorder(const struct bs_tree *tree);
+struct bs_node *bstree_get_next_postorder(const struct bs_node *node);
 int bstree_get_node_key(const struct bs_node *node);
 
 #define bstree_for_each(tree, node)     \
     for (node = bstree_get_first(tree); \
          node;                          \
          node = bstree_get_next(node))
+
+#define bstree_for_each_reverse(tree, node) \
+    for (node = bstree_get_last(tree);      \
+         node;                              \
+         node = bstree_get_prev(node))
+
+#define bstree_postorder_for_each(tree, node)       \
+    for (node = bstree_get_first_postorder(tree);   \
+         node;                                      \
+         node = bstree_get_next_postorder(node))
+        
+#define bstree_postorder_for_each_reverse(tree, node)   \
+    for (node = tree->root;                             \
+         node;                                          \
+         node = bstree_get_prev_postorder(node))
 
 #ifdef __cplusplus
 }

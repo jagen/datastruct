@@ -38,8 +38,6 @@ static inline void bstree_free_node(struct bs_node *node)
 // Get the first node with in-order traversal.
 static struct bs_node *__bstree_get_first(const struct bs_node *root)
 {
-    if (!root)
-        return NULL;
     while (root->left)
         root = root->left;
     return (struct bs_node *)root;
@@ -48,8 +46,6 @@ static struct bs_node *__bstree_get_first(const struct bs_node *root)
 // Get the last node with in-order traversal.
 static struct bs_node *__bstree_get_last(const struct bs_node *root)
 {   
-    if (!root)
-        return NULL;
     while (root->right)
         root = root->right;
     return (struct bs_node *)root;
@@ -57,26 +53,19 @@ static struct bs_node *__bstree_get_last(const struct bs_node *root)
 
 // Get the prev node with in-order traversal.
 static struct bs_node *__bstree_get_prev(const struct bs_node *node)
-{
-    if (!node)
-        return NULL;
-    
+{    
     if (!node->left) {
         struct bs_node *p = NULL;
         while ((p = node->parent) && node == p->left)
             node = p;
         return p;
     }
-
     return __bstree_get_last(node->left);
 }
 
 // Get the next node with in-order traversal.
 static struct bs_node *__bstree_get_next(const struct bs_node *node)
 {
-    if (!node)
-        return NULL;
-
     if (!node->right) {
         struct bs_node *p = NULL;
         while ((p = node->parent) && node == p->right)
@@ -89,23 +78,37 @@ static struct bs_node *__bstree_get_next(const struct bs_node *node)
 // Get the first node with post-order traversal.
 static struct bs_node *__bstree_get_first_postorder(const struct bs_node *node)
 {
-    if (!node)
-        return NULL;
-
     for (;;) {
         if (node->left) 
             node = node->left;
         else if (node->right)
             node = node->right;
+        else
+            return (struct bs_node *)node;
     }
-    return (struct bs_node *)node;
 }
 
-static struct bs_node *__bstree_get_next_postorder(const struct bs_node *node)
+// Get the prev node with post-order traversal.
+static struct bs_node *__bstree_get_prev_postorder(const struct bs_node *node)
 {
-    if (!node)
-        return NULL;
+    if (node->right)
+        return (struct bs_node *)node->right;
+    else if (node->left) 
+        return (struct bs_node *)node->left;
     
+    struct bs_node *p = node->parent;
+    while (p) {
+        if (p->left && node != p->left)
+            return (struct bs_node *)p->left;
+        node = p;
+        p = p->parent;
+    }
+    return p;
+}
+
+// Get the next node with post-order traversal.
+static struct bs_node *__bstree_get_next_postorder(const struct bs_node *node)
+{    
     struct bs_node *p = node->parent;
     if (p && node == p->left && p->right) {
         return __bstree_get_first_postorder(p->right);
@@ -133,7 +136,8 @@ static int __bstree_insert_r(struct bs_node **node, struct bs_node *p, int key)
 // Insert a new node by iteration method.
 static int __bstree_insert_i(struct bs_node **root, struct bs_node *new)
 {
-    if (!new) return -1;
+    if (!new) 
+        return -1;
 
     struct bs_node *parent = NULL;
     int key = new->key;
@@ -222,26 +226,51 @@ int bstree_insert(struct bs_tree *tree, int key)
 
 struct bs_node *bstree_get_first(const struct bs_tree *tree)
 {
-    if (!tree)
+    if (!tree || !tree->root)
         return NULL;
     return __bstree_get_first(tree->root);
 }
 
 struct bs_node *bstree_get_last(const struct bs_tree *tree)
 {
-    if (!tree)
+    if (!tree || !tree->root)
         return NULL;
     return __bstree_get_last(tree->root);
 }
 
 struct bs_node *bstree_get_prev(const struct bs_node *node)
 {
+    if (!node)
+        return NULL;
     return __bstree_get_prev(node);
 }
 
 struct bs_node *bstree_get_next(const struct bs_node *node)
 {
+    if (!node)
+        return NULL;
     return __bstree_get_next(node);
+}
+
+struct bs_node *bstree_get_first_postorder(const struct bs_tree *tree)
+{
+    if (!tree || !tree->root)
+        return NULL;
+    return __bstree_get_first_postorder(tree->root);
+}
+
+struct bs_node *bstree_get_prev_postorder(const struct bs_node *node)
+{
+    if (!node)
+        return NULL;
+    return __bstree_get_prev_postorder(node);
+}
+
+struct bs_node *bstree_get_next_postorder(const struct bs_node *node)
+{
+    if (!node)
+        return NULL;
+    return __bstree_get_next_postorder(node);
 }
 
 int bstree_remove(struct bs_tree *tree, int key)
@@ -336,9 +365,21 @@ int main( int argc, char* argv[] )
     printf("last key is: %d\n", bstree_get_last(tree)->key);
 
     struct bs_node* node = NULL;
-    bstree_for_each(tree, node) {
-        printf( "key: %d\n", node->key);
-    }
+    bstree_for_each(tree, node)
+        printf( "%d ", node->key);
+    printf("\n");
+
+    bstree_for_each_reverse(tree, node)
+        printf( "%d ", node->key);
+    printf("\n");
+
+    bstree_postorder_for_each(tree, node)
+        printf( "%d ", node->key);
+    printf("\n");
+
+    bstree_postorder_for_each_reverse(tree, node)
+        printf( "%d ", node->key);
+    printf("\n");
     
     printf("key=1  %d\n", bstree_find_by_key(tree, 1));
 
