@@ -277,6 +277,8 @@ struct bs_node *bstree_get_first_postorder(const struct bs_tree *tree)
 
 struct bs_node *bstree_get_prev_postorder(const struct bs_node *node)
 {
+
+    //aaaa
     if (!node)
         return NULL;
     return __bstree_get_prev_postorder(node);
